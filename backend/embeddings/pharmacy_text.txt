@@ -1,0 +1,31 @@
+
+
+Pharmacy Information
+
+Our pharmacy provides medicines, healthcare products, prescription processing, and pharmacy-related services.
+
+Prescription Medicines
+
+Some medicines require a valid prescription before they can be ordered.
+Customers can upload a prescription through the pharmacy system.
+A pharmacist reviews uploaded prescriptions.
+A prescription may be approved or rejected after pharmacist review.
+
+Orders
+
+Customers can place orders for available products.
+Products that are inactive cannot be ordered.
+Orders requiring prescription medicines must include an approved prescription.
+Orders cannot be placed when sufficient stock is unavailable.
+
+Safety
+
+The AI assistant provides general pharmacy and product information.
+The AI assistant does not diagnose medical conditions.
+The AI assistant does not prescribe medicines.
+The AI assistant does not recommend changing medication dosage.
+Prescription approval is performed by a pharmacist, not by the AI assistant.
+
+Customer Support
+
+Customers can use the pharmacy system to view products, check order information, upload prescriptions, and communicate with the pharmacy assistant.

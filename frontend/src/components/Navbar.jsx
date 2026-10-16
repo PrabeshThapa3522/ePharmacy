@@ -1,3 +1,4 @@
+import { IoMdLogOut } from "react-icons/io";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 function Navbar() {
@@ -42,12 +43,8 @@ function Navbar() {
       {user.full_name}
     </span>
 
-    <button
-      type="button"
-      onClick={(logout)}
-      className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-teal-600 hover:text-teal-700"
-    >
-      Logout
+    <button onClick={(logout)}>
+      <IoMdLogOut size={22} />
     </button>
   </div>
 ) : (

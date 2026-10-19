@@ -82,6 +82,33 @@ function PharmacistDashboard() {
     setErrorMessage("Unable to connect to the server.")
   }
 }
+const viewPrescription = async (prescriptionId) => {
+  try {
+    const token = localStorage.getItem("access_token")
+
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/prescriptions/${prescriptionId}/file`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    )
+
+    if (!response.ok) {
+      setErrorMessage("Unable to open the prescription file.")
+      return
+    }
+
+    const fileBlob = await response.blob()
+    const fileUrl = URL.createObjectURL(fileBlob)
+
+    window.open(fileUrl, "_blank", "noopener,noreferrer")
+  } catch (error) {
+    setErrorMessage("Unable to connect to the server.")
+  }
+}
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -151,6 +178,13 @@ function PharmacistDashboard() {
                         </p>
                       </div>
 
+                      <button
+  type="button"
+  onClick={() => viewPrescription(prescription.id)}
+  className="mt-3 inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+>
+  View Prescription
+</button>
                       <span
                         className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${
                           prescription.status === "approved"

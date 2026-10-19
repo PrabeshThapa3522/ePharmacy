@@ -1,5 +1,6 @@
 
 from pathlib import Path
+from fastapi.responses import FileResponse
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -128,6 +129,51 @@ def get_all_prescriptions(
         for prescription in prescriptions
     ]
 
+
+@router.get("/{prescription_id}/file")
+def view_prescription_file(
+    prescription_id: int,
+    current_user: User = Depends(require_staff),
+    db: Session = Depends(get_db),
+):
+    prescription = (
+        db.query(Prescription)
+        .filter(Prescription.id == prescription_id)
+        .first()
+    )
+
+    if not prescription:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Prescription not found.",
+        )
+
+    if not prescription.image_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Prescription file not found.",
+        )
+
+    file_path = Path(prescription.image_url).resolve()
+
+    if not file_path.is_file():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Prescription file is missing from the server.",
+        )
+
+    return FileResponse(
+        path=file_path,
+        media_type=(
+            "application/pdf"
+            if file_path.suffix.lower() == ".pdf"
+            else "image/jpeg"
+            if file_path.suffix.lower() in {".jpg", ".jpeg"}
+            else "image/png"
+        ),
+        filename=file_path.name,
+        content_disposition_type="inline",
+    )
 
 @router.patch(
     "/{prescription_id}/review",

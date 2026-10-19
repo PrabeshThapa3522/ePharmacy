@@ -43,7 +43,11 @@ function Navbar() {
       {user.full_name}
     </span>
 
-    <button onClick={(logout)}>
+    <button 
+      onClick={(logout)}
+      className="text-slate-600 hover:text-red-600"
+      title="Logout"
+      >
       <IoMdLogOut size={22} />
     </button>
   </div>

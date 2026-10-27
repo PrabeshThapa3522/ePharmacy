@@ -16,6 +16,8 @@ from app.models.order_item import OrderItem
 from app.routes.orders import router as orders_router
 from app.routes.auth import router as auth_router
 from app.routes.ai import router as ai_router
+from app.models.medicine_history import MedicineHistory
+from app.routes import medicine_history
 
 Base.metadata.create_all(bind=engine)
 
@@ -42,6 +44,7 @@ app.include_router(inventory_router)
 app.include_router(prescriptions_router)
 app.include_router(orders_router)
 app.include_router(ai_router)
+app.include_router(medicine_history.router)
 
 @app.get("/")
 def root():

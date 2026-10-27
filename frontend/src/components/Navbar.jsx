@@ -44,7 +44,7 @@ function Navbar() {
     </span>
 
     <button 
-      onClick={(logout)}
+      onClick={logout}
       className="text-slate-600 hover:text-red-600"
       title="Logout"
       >

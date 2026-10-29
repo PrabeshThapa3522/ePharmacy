@@ -26,60 +26,77 @@ router = APIRouter(
     response_model=MedicineHistoryResponse,
     status_code=status.HTTP_201_CREATED,
 )
+
 def create_medicine_history(
     data: MedicineHistoryCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    # Customers can only add records to their own history.
-    # Staff can add records for a selected customer.
-    customer_id = current_user.id
+    staff_roles = {"staff", "pharmacist", "admin"}
 
-    if current_user.role in {"staff", "pharmacist", "admin"}:
-        if data.customer_id is not None:
-            customer_id = data.customer_id
-
-            customer = db.query(User).filter(
-                User.id == customer_id
-            ).first()
-
-            if not customer:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Customer not found.",
-                )
-    elif data.customer_id is not None and data.customer_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only add records to your own history.",
-        )
-
-    # Do not allow customers to mark their own records as verified.
-    if current_user.role not in {"staff", "pharmacist", "admin"}:
+    # Customers can only create records for themselves.
+    if current_user.role not in staff_roles:
+        if data.customer_id is not None and data.customer_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only add records to your own history.",
+            )
+        customer_id = current_user.id
         record_type = "self_reported"
-    else:
-        record_type = data.record_type
 
-    if record_type not in {
-        "self_reported",
-        "pharmacy_supplied",
-        "verified",
-    }:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid medicine record type.",
-        )
+    else:
+        # Staff may select a customer; default to the current user's ID
+        # only if no customer ID was provided (which will fail validation).
+        if data.customer_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Please select a customer.",
+            )
+
+        customer = db.query(User).filter(
+            User.id == data.customer_id
+        ).first()
+
+        if customer is None or customer.role != "customer":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Customer account not found.",
+            )
+
+        customer_id = customer.id
+
+        if data.record_type not in {
+            "self_reported",
+            "pharmacy_supplied",
+            "verified",
+        }:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid medicine record type.",
+            )
+
+        if data.record_type == "verified" and current_user.role not in {
+            "pharmacist",
+            "admin",
+        }:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only pharmacists or admins can verify medicine records.",
+            )
+
+        record_type = data.record_type
 
     # Validate a linked product, if supplied.
     if data.product_id is not None:
         product = db.query(Product).filter(
-            Product.id == data.product_id
+            Product.id == data.product_id,
+            Product.is_active.is_(True),
         ).first()
 
-        if not product:
+        if product is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Selected product not found.",
+                detail="Active product not found.",
             )
 
     medicine_name = data.medicine_name.strip()
@@ -129,16 +146,18 @@ def get_my_medicine_history(
     "/customer/{customer_id}",
     response_model=list[MedicineHistoryResponse],
 )
+
 def get_customer_medicine_history(
     customer_id: int,
     current_user: User = Depends(require_staff),
     db: Session = Depends(get_db),
 ):
     customer = db.query(User).filter(
-        User.id == customer_id
+        User.id == customer_id,
+        User.role == "customer",
     ).first()
 
-    if not customer:
+    if customer is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Customer not found.",
@@ -150,6 +169,7 @@ def get_customer_medicine_history(
         .order_by(MedicineHistory.created_at.desc())
         .all()
     )
+
 
 
 @router.get(
@@ -211,3 +231,18 @@ def search_medicines(
         .all()
     )
 
+
+@router.get(
+    "/customers",
+    response_model=list[CustomerSearchResult],
+)
+def get_all_customers(
+    current_user: User = Depends(require_staff),
+    db: Session = Depends(get_db),
+):
+    return (
+        db.query(User)
+        .filter(User.role == "customer")
+        .order_by(User.full_name.asc())
+        .all()
+    )

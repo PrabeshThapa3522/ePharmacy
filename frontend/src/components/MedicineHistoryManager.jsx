@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 
 const API_BASE = "http://127.0.0.1:8000/api/medicine-history"
 
@@ -7,6 +7,9 @@ function MedicineHistoryManager() {
   const [customerQuery, setCustomerQuery] = useState("")
   const [customers, setCustomers] = useState([])
   const [selectedCustomer, setSelectedCustomer] = useState(null)
+  const [allCustomers, setAllCustomers] = useState([])
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(false)
+  const [showCustomerDirectory, setShowCustomerDirectory] = useState(true)
   const [medicineQuery, setMedicineQuery] = useState("")
   const [medicines, setMedicines] = useState([])
   const [selectedMedicine, setSelectedMedicine] = useState(null)
@@ -21,6 +24,62 @@ function MedicineHistoryManager() {
   const [isSaving, setIsSaving] = useState(false)
 
   const token = () => localStorage.getItem("access_token")
+
+  const loadAllCustomers = async () => {
+  setIsLoadingCustomers(true)
+  setError("")
+
+  try {
+    const response = await fetch(`${API_BASE}/customers`, {
+      headers: {
+        Authorization: `Bearer ${token()}`,
+      },
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Failed to load customers.")
+    }
+
+    setAllCustomers(data)
+  } catch (err) {
+    setError(err.message || "Unable to load customers.")
+  } finally {
+    setIsLoadingCustomers(false)
+  }
+}
+  
+  const customerSearchRef = useRef(null)
+  const medicineSearchRef = useRef(null)
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (
+        customerSearchRef.current &&
+        !customerSearchRef.current.contains(event.target)
+        ) {
+      setCustomers([])
+    }
+
+    if (
+      medicineSearchRef.current &&
+      !medicineSearchRef.current.contains(event.target)
+    ) {
+      setMedicines([])
+    }
+  }
+
+  document.addEventListener("mousedown", handleClickOutside)
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside)
+  }
+}, [])
+
+useEffect(() => {
+  loadAllCustomers()
+}, [])
 
   const searchCustomers = async (value) => {
     setCustomerQuery(value)
@@ -192,6 +251,8 @@ function MedicineHistoryManager() {
           Search for a regular customer to view their medicine records or add
           a new entry.
         </p>
+
+        
       </div>
 
       {error && (
@@ -206,7 +267,7 @@ function MedicineHistoryManager() {
         </p>
       )}
 
-      <div className="relative mt-6">
+      <div ref={customerSearchRef} className="relative mt-6">
         <label className="mb-2 block text-sm font-medium text-slate-700">
           Search customer by name or email
         </label>
@@ -255,7 +316,7 @@ function MedicineHistoryManager() {
               Add Medicine Record
             </h3>
 
-            <div className="relative">
+            <div ref={medicineSearchRef} className="relative">
               <label className="mb-2 block text-sm font-medium text-slate-700">
                 Medicine name
               </label>
@@ -412,6 +473,79 @@ function MedicineHistoryManager() {
               </div>
             )}
           </div>
+
+      <div className="mt-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className="text-lg font-semibold text-slate-900">
+            Customer Directory
+          </h3>
+
+          <button
+            type="button"
+            onClick={() => setShowCustomerDirectory((current) => !current)}
+            className="text-sm font-semibold text-teal-700 hover:text-teal-800"
+          >
+            {showCustomerDirectory ? "Hide customers" : "Show customers"}
+          </button>
+        </div>
+
+        {showCustomerDirectory && (
+          <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
+            <div className="flex items-center justify-between bg-slate-50 px-4 py-3">
+              <p className="text-sm text-slate-600">
+                {allCustomers.length} customer
+                {allCustomers.length !== 1 ? "s" : ""}
+              </p>
+
+              <button
+                type="button"
+                onClick={loadAllCustomers}
+                disabled={isLoadingCustomers}
+                className="text-sm font-medium text-teal-700 disabled:opacity-50"
+              >
+                {isLoadingCustomers ? "Refreshing..." : "Refresh"}
+              </button>
+            </div>
+
+            {isLoadingCustomers && allCustomers.length === 0 ? (
+              <p className="p-5 text-sm text-slate-500">
+                Loading customers...
+              </p>
+            ) : allCustomers.length === 0 ? (
+              <p className="p-5 text-sm text-slate-500">
+                No customers found.
+              </p>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {allCustomers.map((customer) => (
+                  <div
+                    key={customer.id}
+                    className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <p className="font-medium text-slate-900">
+                        {customer.full_name}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {customer.email}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => loadHistory(customer)}
+                      className="w-fit rounded-lg border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-700 hover:bg-teal-50"
+                    >
+                      View History
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
 
           <p className="mt-6 text-xs leading-5 text-slate-500">
             Medicine history is a reference record, not a prescription or

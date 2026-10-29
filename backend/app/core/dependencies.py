@@ -48,6 +48,7 @@ def get_current_user(
 
     return user
 
+
 def require_staff(
     current_user: User = Depends(get_current_user),
 ) -> User:
@@ -56,7 +57,10 @@ def require_staff(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Staff access required",
         )
-        
+
+    return current_user
+
+
 def require_pharmacist(
     current_user: User = Depends(get_current_user),
 ) -> User:
@@ -65,7 +69,5 @@ def require_pharmacist(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Pharmacist access required",
         )
-
-
 
     return current_user

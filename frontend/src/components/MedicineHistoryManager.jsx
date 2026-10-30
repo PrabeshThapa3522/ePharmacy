@@ -22,6 +22,9 @@ function MedicineHistoryManager() {
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+
+  
 
   const token = () => localStorage.getItem("access_token")
 
@@ -112,32 +115,38 @@ useEffect(() => {
     }
   }
 
-  const loadHistory = async (customer) => {
-    setSelectedCustomer(customer)
-    setCustomerQuery(customer.full_name)
-    setCustomers([])
-    setError("")
-    setMessage("")
+const loadHistory = async (customer) => {
+  setSelectedCustomer(customer)
+  setCustomerQuery(customer.full_name)
+  setCustomers([])
+  setHistory([])
+  setError("")
+  setMessage("")
+  setIsLoadingHistory(true)
 
-    try {
-      const response = await fetch(
-        `${API_BASE}/customer/${customer.id}`,
-        {
-          headers: { Authorization: `Bearer ${token()}` },
-        }
-      )
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.detail || "Failed to load medicine history.")
+  try {
+    const response = await fetch(
+      `${API_BASE}/customer/${customer.id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token()}`,
+        },
       }
+    )
 
-      setHistory(data)
-    } catch (err) {
-      setError(err.message || "Unable to load medicine history.")
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Failed to load medicine history.")
     }
-  }
 
+    setHistory(data)
+  } catch (err) {
+    setError(err.message || "Unable to load medicine history.")
+  } finally {
+    setIsLoadingHistory(false)
+  }
+}
   const searchMedicines = async (value) => {
     setMedicineQuery(value)
     setSelectedMedicine(null)
@@ -300,6 +309,152 @@ useEffect(() => {
         )}
       </div>
 
+      {/* Customer Directory */}
+<div className="mt-8 rounded-xl border border-slate-200 p-5">
+  <div className="flex items-center justify-between">
+    <h3 className="text-lg font-semibold text-slate-900">
+      Customer Directory
+    </h3>
+
+    <button
+      type="button"
+      onClick={() => setShowCustomerDirectory((current) => !current)}
+      className="text-sm font-semibold text-teal-700 hover:text-teal-800"
+    >
+      {showCustomerDirectory ? "Hide customers" : "Show customers"}
+    </button>
+  </div>
+
+  {showCustomerDirectory && (
+    <div className="mt-4">
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-sm text-slate-600">
+          {allCustomers.length} customer
+          {allCustomers.length !== 1 ? "s" : ""}
+        </p>
+
+        <button
+          type="button"
+          onClick={loadAllCustomers}
+          disabled={isLoadingCustomers}
+          className="text-sm font-medium text-teal-700 disabled:opacity-50"
+        >
+          {isLoadingCustomers ? "Refreshing..." : "Refresh"}
+        </button>
+      </div>
+
+      {isLoadingCustomers && allCustomers.length === 0 ? (
+        <p className="p-4 text-sm text-slate-500">
+          Loading customers...
+        </p>
+      ) : allCustomers.length === 0 ? (
+        <p className="p-4 text-sm text-slate-500">
+          No customers found.
+        </p>
+      ) : (
+        <div className="divide-y divide-slate-100">
+          {allCustomers.map((customer) => (
+            <div key={customer.id} className="py-4">
+              {/* Customer name and View History button */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-medium text-slate-900">
+                    {customer.full_name}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {customer.email}
+                  </p>
+                </div>
+
+                <button
+  type="button"
+  onClick={() => {
+    if (selectedCustomer?.id === customer.id) {
+      setSelectedCustomer(null)
+      setHistory([])
+      setError("")
+    } else {
+      loadHistory(customer)
+    }
+  }}
+  className="w-fit rounded-lg border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-700 hover:bg-teal-50"
+>
+  {selectedCustomer?.id === customer.id
+    ? "Hide History"
+    : "View History"}
+</button>
+              </div>
+
+              {/* Show this customer's history directly below their name */}
+              {selectedCustomer?.id === customer.id && (
+                <div className="mt-4 rounded-lg bg-slate-50 p-4">
+                  <h4 className="font-semibold text-slate-900">
+                    Medicine History - {customer.full_name}
+                  </h4>
+
+                  {isLoadingHistory ? (
+                    <p className="mt-3 text-sm text-slate-500">
+                      Loading medicine history...
+                    </p>
+                  ) : history.length === 0 ? (
+                    <p className="mt-3 text-sm text-slate-500">
+                      No medicine history recorded for this customer yet.
+                    </p>
+                  ) : (
+                    <div className="mt-3 space-y-3">
+                      {history.map((record) => (
+                        <article
+                          key={record.id}
+                          className="rounded-lg border border-slate-200 bg-white p-4"
+                        >
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                              <p className="font-semibold text-slate-900">
+                                {record.medicine_name}
+                              </p>
+
+                              <p className="mt-1 text-sm text-slate-600">
+                                {record.strength || "Strength not recorded"}
+                                {record.quantity
+                                  ? ` · Quantity: ${record.quantity}`
+                                  : ""}
+                              </p>
+                            </div>
+
+                            <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                              {record.record_type.replaceAll("_", " ")}
+                            </span>
+                          </div>
+
+                          <p className="mt-2 text-xs text-slate-500">
+                            Record date: {record.recorded_date || "Not specified"}
+                          </p>
+
+                          {record.notes && (
+                            <p className="mt-2 text-sm text-slate-600">
+                              {record.notes}
+                            </p>
+                          )}
+                        </article>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="mt-4 text-xs leading-5 text-slate-500">
+                    Medicine history is a reference record, not a prescription
+                    or authorization to dispense. Prescription requirements
+                    and pharmacist review still apply.
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )}
+</div>
+
       {selectedCustomer && (
         <>
           <div className="mt-6 rounded-lg bg-slate-50 p-4">
@@ -430,128 +585,7 @@ useEffect(() => {
             </button>
           </form>
 
-          <div className="mt-10">
-            <h3 className="text-lg font-semibold text-slate-900">
-              Previous Medicine Records
-            </h3>
-
-            {history.length === 0 ? (
-              <p className="mt-4 rounded-lg bg-slate-50 p-5 text-sm text-slate-500">
-                No medicine history recorded for this customer yet.
-              </p>
-            ) : (
-              <div className="mt-4 space-y-3">
-                {history.map((record) => (
-                  <article
-                    key={record.id}
-                    className="rounded-lg border border-slate-200 p-4"
-                  >
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="font-semibold text-slate-900">
-                          {record.medicine_name}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-600">
-                          {record.strength || "Strength not recorded"}
-                          {record.quantity ? ` · Quantity: ${record.quantity}` : ""}
-                        </p>
-                      </div>
-                      <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                        {record.record_type.replaceAll("_", " ")}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-xs text-slate-500">
-                      Record date: {record.recorded_date || "Not specified"}
-                    </p>
-                    {record.notes && (
-                      <p className="mt-2 text-sm text-slate-600">
-                        {record.notes}
-                      </p>
-                    )}
-                  </article>
-                ))}
-              </div>
-            )}
-          </div>
-
-      <div className="mt-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h3 className="text-lg font-semibold text-slate-900">
-            Customer Directory
-          </h3>
-
-          <button
-            type="button"
-            onClick={() => setShowCustomerDirectory((current) => !current)}
-            className="text-sm font-semibold text-teal-700 hover:text-teal-800"
-          >
-            {showCustomerDirectory ? "Hide customers" : "Show customers"}
-          </button>
-        </div>
-
-        {showCustomerDirectory && (
-          <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
-            <div className="flex items-center justify-between bg-slate-50 px-4 py-3">
-              <p className="text-sm text-slate-600">
-                {allCustomers.length} customer
-                {allCustomers.length !== 1 ? "s" : ""}
-              </p>
-
-              <button
-                type="button"
-                onClick={loadAllCustomers}
-                disabled={isLoadingCustomers}
-                className="text-sm font-medium text-teal-700 disabled:opacity-50"
-              >
-                {isLoadingCustomers ? "Refreshing..." : "Refresh"}
-              </button>
-            </div>
-
-            {isLoadingCustomers && allCustomers.length === 0 ? (
-              <p className="p-5 text-sm text-slate-500">
-                Loading customers...
-              </p>
-            ) : allCustomers.length === 0 ? (
-              <p className="p-5 text-sm text-slate-500">
-                No customers found.
-              </p>
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {allCustomers.map((customer) => (
-                  <div
-                    key={customer.id}
-                    className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <p className="font-medium text-slate-900">
-                        {customer.full_name}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {customer.email}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => loadHistory(customer)}
-                      className="w-fit rounded-lg border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-700 hover:bg-teal-50"
-                    >
-                      View History
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-
-          <p className="mt-6 text-xs leading-5 text-slate-500">
-            Medicine history is a reference record, not a prescription or
-            authorization to dispense. Prescription requirements and pharmacist
-            review still apply.
-          </p>
+         
         </>
       )}
     </section>

@@ -10,6 +10,8 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicRoute from "./routes/PublicRoute";
 import PharmacistDashboard from "./pages/PharmacistDashboard"
 import RoleRoute from "./routes/RoleRoute"
+
+import AIAssistant from "./pages/AIAssistant"
 function App() {
   return (
     <BrowserRouter>
@@ -17,6 +19,7 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/products" element={<Products />}/>
       <Route path="/products/:id" element={<ProductDetails />} />
+      <Route path="/ai-assistant" element={<AIAssistant />} />
       <Route path="/prescriptions" element={
         <ProtectedRoute>
           <Prescriptions />

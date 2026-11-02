@@ -55,15 +55,20 @@ def get_ai_response(message: str) -> str:
         convert_to_numpy=True,
     ).astype("float32")
 
-    # Search FAISS
+    # Search FAISS for the top 3 relevant chunks
     distances, indices = index.search(
         question_embedding,
-        k=1,
+        k=3,
     )
 
     # Get relevant knowledge
-    best_index = indices[0][0]
-    retrieved_knowledge = chunks[best_index]
+    retrieved_chunks = []
+
+    for chunk_index in indices[0]:
+        if chunk_index != -1 and chunk_index < len(chunks):
+            retrieved_chunks.append(chunks[chunk_index])
+
+    retrieved_knowledge = "\n\n".join(retrieved_chunks)
 
     # Create prompt
     prompt = f"""

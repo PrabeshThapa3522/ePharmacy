@@ -129,8 +129,8 @@ Create a `.env` file in the backend directory using `.env.example` as a referenc
 Example:
 
 ```env
-DATABASE_URL=postgresql://user@localhost:5432/pharmacy_db
-SECRET_KEY=Secrete_Key123
+DATABASE_URL=postgresql://YOUR_USERNAME:YOUR_PASSWORD@localhost:5432/pharmacy_db
+SECRET_KEY=your_secret_key
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```

@@ -13,6 +13,7 @@ function Navbar() {
             Bishwas Pharmacy
           </h1>
         </div>
+        <Link to="/ai-assistant">AI Assistant</Link>
 
         {/* Navigation */}
         <nav className="flex items-center gap-8">

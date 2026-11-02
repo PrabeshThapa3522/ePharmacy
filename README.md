@@ -282,3 +282,7 @@ Response:
 ## License
 
 This project is currently developed for educational and portfolio purposes. A license can be added when the project is ready for distribution.
+
+
+Appendix
+

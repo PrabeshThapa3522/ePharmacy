@@ -10,7 +10,7 @@ function Navbar() {
         {/* Logo */}
         <div>
           <h1 className="text-xl font-bold text-teal-700">
-            Bishwas Pharmacy
+            ePharmacy
           </h1>
         </div>
         <Link to="/ai-assistant">AI Assistant</Link>

@@ -86,7 +86,7 @@ function AIAssistant() {
 
           <div>
             <h1 className="text-xl font-bold text-slate-900">
-              Bishwas AI Assistant
+              Pharmacy AI Assistant
             </h1>
             <p className="mt-1 text-sm text-slate-500">
               Pharmacy information and product assistance

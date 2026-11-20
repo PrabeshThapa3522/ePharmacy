@@ -1,8 +1,9 @@
 
 import { useState, useRef, useEffect } from "react"
 import { IoSend, IoSparkles, IoPerson } from "react-icons/io5"
+import API_BASE_URL from "../api";
 
-const API_URL = "http://127.0.0.1:8000/api/ai/chat"
+const API_URL = `${API_BASE_URL}/api/ai/chat`
 
 function AIAssistant() {
   const [message, setMessage] = useState("")

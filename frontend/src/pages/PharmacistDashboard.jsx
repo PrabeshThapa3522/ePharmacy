@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import Navbar from "../components/Navbar"
 import Footer from "../components/Footer"
 import MedicineHistoryManager from "../components/MedicineHistoryManager"
+import API_BASE_URL from "../api";
+
 function PharmacistDashboard() {
   const [prescriptions, setPrescriptions] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -13,7 +15,7 @@ function PharmacistDashboard() {
         const token = localStorage.getItem("access_token")
 
         const response = await fetch(
-          "http://127.0.0.1:8000/api/prescriptions/",
+          `${API_BASE_URL}/api/prescriptions`,
           {
             method: "GET",
             headers: {
@@ -49,7 +51,7 @@ function PharmacistDashboard() {
     const token = localStorage.getItem("access_token")
 
     const response = await fetch(
-      `http://127.0.0.1:8000/api/prescriptions/${prescriptionId}/review`,
+      `${API_BASE_URL}/api/prescriptions/${prescriptionId}/review`,
       {
         method: "PATCH",
         headers: {
@@ -87,7 +89,7 @@ const viewPrescription = async (prescriptionId) => {
     const token = localStorage.getItem("access_token")
 
     const response = await fetch(
-      `http://127.0.0.1:8000/api/prescriptions/${prescriptionId}/file`,
+      `${API_BASE_URL}/api/prescriptions/${prescriptionId}/file`,
       {
         method: "GET",
         headers: {

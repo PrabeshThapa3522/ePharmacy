@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import Navbar from "../components/Navbar"
 import Footer from "../components/Footer"
+import API_BASE_URL from "../api";
 
 function Prescriptions() {
   const [file, setFile] = useState(null)
@@ -18,7 +19,7 @@ function Prescriptions() {
       const token = localStorage.getItem("access_token")
 
       const response = await fetch(
-        "http://127.0.0.1:8000/api/prescriptions/my",
+        `${API_BASE_URL}/api/prescriptions/my`,
         {
           method: "GET",
           headers: {
@@ -73,7 +74,7 @@ function Prescriptions() {
       formData.append("file", file)
 
       const response = await fetch(
-        "http://127.0.0.1:8000/api/prescriptions",
+        `${API_BASE_URL}/api/prescriptions`,
         {
           method: "POST",
           headers: {

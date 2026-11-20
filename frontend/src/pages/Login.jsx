@@ -3,6 +3,7 @@ import Footer from "../components/Footer"
 import { Link, useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { useAuth } from "../context/AuthContext"
+import API_BASE_URL from "../api";
 function Login() {
   const { setUser } = useAuth()
   const navigate = useNavigate()
@@ -16,7 +17,7 @@ function Login() {
 
   try {
     const response = await fetch(
-      "http://127.0.0.1:8000/api/auth/login",
+      `${API_BASE_URL}/api/auth/login`,
       {
         method: "POST",
         headers: {
@@ -48,7 +49,7 @@ function Login() {
     localStorage.setItem("access_token", data.access_token)
 
 const userResponse = await fetch(
-  "http://127.0.0.1:8000/api/auth/me",
+  `${API_BASE_URL}/api/auth/me`,
   {
     method: "GET",
     headers: {

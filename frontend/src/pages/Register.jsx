@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar"
 import Footer from "../components/Footer"
 import { Link, useNavigate } from "react-router-dom"
 import { Eye, EyeOff } from "lucide-react"
+import API_BASE_URL from "../api";
 
 function Register() {
   const navigate = useNavigate()
@@ -68,7 +69,7 @@ function Register() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/auth/register",
+        `${API_BASE_URL}/api/auth/register`,
         {
           method: "POST",
           headers: {

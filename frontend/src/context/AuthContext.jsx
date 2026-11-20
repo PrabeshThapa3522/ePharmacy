@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react"
-
+import API_BASE_URL from "../api";
 const AuthContext = createContext()
 
 export function AuthProvider({ children }) {
@@ -18,7 +18,7 @@ useEffect(() => {
   const loadUser = async () => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/auth/me",
+        `${API_BASE_URL}/api/auth/me`,
         {
           method: "GET",
           headers: {
